@@ -8,6 +8,11 @@ tags: [knowledge-base, logseq, zettelkasten, atomic-note, doto]
 
 # zettelgate — 跨 Agent 写笔记统一入口
 
+> **路径约定**：文中 `<zettelgate>` 指 zettelgate 系统仓根目录，默认 `~/zettelgate`
+> （本文件经软链部署后，真实位置即该系统仓下的 `adapters/SKILL.md`，故系统仓根 = 本文件所在目录的上两级）。
+> 若你的系统仓在他处，请把文中 `<zettelgate>` 统一替换为实际绝对路径。
+> `$VAULT` 指笔记库根（如 `~/LogseqVault`），各端按自己的库填。
+
 > 本文件只是**指针**。规范正文在 `<zettelgate>/specs/`，门禁实现在 `<zettelgate>/src/zettelgate/`，
 > 方法论只读快照在 `<zettelgate>/references/doto/`（见其 `SOURCE.md`）。
 > **禁止在适配层复制或改写规范正文**；笔记数据留在各自的 `$VAULT`，不进系统仓。

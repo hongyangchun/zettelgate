@@ -343,26 +343,38 @@ def cmd_link(args):
     if not SKILL_SRC.exists():
         print(f"[ERR] 技能源目录不存在：{SKILL_SRC}")
         return 1
+    dry = getattr(args, "dry_run", False)
     print(f"技能源：{SKILL_SRC}")
     targets = paths.adapters()
     if not targets:
         print("未配置 adapters。设置 ZETTELGATE_ADAPTERS（多路径用 : 分隔），")
         print('或写 ~/.config/zettelgate/adapters.json：{"adapters": ["<软链目标>"]}')
         return 1
+    if dry:
+        print("[DRY-RUN] 以下为将执行的软链操作（不实际创建/修改）：")
     for t in targets:
         t.parent.mkdir(parents=True, exist_ok=True)
         if t.is_symlink():
             if t.resolve() == SKILL_SRC.resolve():
-                print(f"  [OK]     {t}")
+                line = f"  [OK]     {t}"
             else:
-                t.unlink()
-                t.symlink_to(SKILL_SRC, target_is_directory=True)
-                print(f"  [修复]   {t}")
+                line = f"  [修复]   {t}  ->  {SKILL_SRC}（先删旧链再建）"
         elif t.exists():
-            print(f"  [跳过]   {t} 已是真实目录，未覆盖")
+            line = f"  [跳过]   {t} 已是真实目录，未覆盖"
+        else:
+            line = f"  [新建]   {t}  ->  {SKILL_SRC}"
+        print(("[DRY-RUN] " if dry else "") + line)
+        if dry:
+            continue
+        if t.is_symlink():
+            if t.resolve() == SKILL_SRC.resolve():
+                continue
+            t.unlink()
+            t.symlink_to(SKILL_SRC, target_is_directory=True)
+        elif t.exists():
+            continue
         else:
             t.symlink_to(SKILL_SRC, target_is_directory=True)
-            print(f"  [新建]   {t}")
     return 0
 
 def cmd_init(args):
@@ -419,6 +431,7 @@ def main():
     p.set_defaults(func=cmd_index)
 
     p = sub.add_parser("link", help="创建/修复各 Agent 的 skill 软链")
+    p.add_argument("--dry-run", action="store_true", help="只打印将执行的软链操作，不实际创建")
     p.set_defaults(func=cmd_link)
 
     p = sub.add_parser("init", help="在笔记库根生成 vault.yaml（不改动笔记正文）")
@@ -437,7 +450,7 @@ def main():
     vault_arg = args.vault or getattr(args, "vault_in_sub", None)
     if vault_arg:
         paths.set_vault(vault_arg)
-    if args.cmd != "init" and V is None:
+    if args.cmd not in ("init", "link") and V is None:
         print("[ERR] " + _VAULT_ERR)
         sys.exit(2)
     sys.exit(args.func(args))

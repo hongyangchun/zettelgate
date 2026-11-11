@@ -302,5 +302,30 @@ class TestUpgrade(VaultTestCase):
         )
 
 
+class TestLink(unittest.TestCase):
+    """link 命令的纯逻辑测试（不触碰真实 Agent 目录 / skills 配置）。"""
+
+    def _cmd(self, adapters, dry_run=False):
+        from unittest import mock
+        from zettelgate import cli
+        with mock.patch.object(cli.paths, "adapters", return_value=adapters):
+            return cli.cmd_link(mock.Mock(dry_run=dry_run))
+
+    def test_no_adapters_prints_hint_and_returns_1(self):
+        rc = self._cmd([])
+        self.assertEqual(rc, 1)
+
+    def test_dry_run_does_not_create(self):
+        import tempfile
+        from unittest import mock
+        d = tempfile.mkdtemp()
+        target = Path(d) / "agent" / "zettelgate"
+        from zettelgate import cli
+        with mock.patch.object(cli.paths, "adapters", return_value=[target]):
+            rc = cli.cmd_link(mock.Mock(dry_run=True))
+        self.assertEqual(rc, 0)
+        self.assertFalse(target.exists(), "dry-run 不应创建任何软链")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
