@@ -49,12 +49,13 @@ cd <vault> && zettelgate lint       # 库根有 vault.yaml 时自动发现
 | 命令 | 作用 |
 |---|---|
 | `new <标题>` | 生成主笔记骨架（Folgezettel 留空、可选 `claim_type::` / `verified::`） |
-| `add <草稿.md>` | 主笔记入库：检骨架 + 幂等维护 index/log + 硬 gate |
-| `register <pages 内的 .md>` | 其它类型页登记（不检骨架） |
-| `lint` / `audit` | 两档门禁 |
-| `index [--fix]` | 覆盖率、类型分布、刷新头部计数 |
-| `init <库目录>` | 生成 `vault.yaml` |
-| `link` | 按 `adapters` 配置创建/修复各 Agent 的 skill 软链 |
+| `add <草稿.md>` | 主笔记入库：检骨架 + 落盘到 `pages/原子笔记/` + 幂等维护 index/log + 硬 gate |
+| `register <pages 内的 .md>` | 其它类型页登记（不检骨架，只维护 index/log + 硬 gate） |
+| `lint` | 硬 gate G1–G8；失败退出码 1（`add`/`register` 写后自动跑） |
+| `audit` | Doto 诊断 D1–D16；只读、恒为 0（不改文件） |
+| `index [--fix]` | 覆盖率、类型分布；默认只读，`--fix` 才刷新头部计数（缺条目返回 1） |
+| `init <库目录>` | 生成 `vault.yaml`（只写配置，绝不碰笔记正文） |
+| `link [--dry-run]` | 按 `adapters` 配置创建/修复各 Agent 的 skill 软链（`--dry-run` 只预览不创建） |
 | `upgrade [--apply]` | 按 vault.yaml 的 `schema_version` 提示/引导升级（只改版本标记，不自动迁移数据） |
 
 所有写入都由 `.vault.lock`（跨平台互斥锁，POSIX + Windows 通用）保护，重复执行不会产生第二条 index/log 条目。
