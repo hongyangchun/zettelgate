@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# 零安装入口：无需 pip install，直接 ./zettelgate --vault <path> lint
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+exec env PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m zettelgate "$@"

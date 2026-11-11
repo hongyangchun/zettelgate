@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zettelgate"
+version = "0.1.0"
+description = "Doto 式笔记方法论操作系统：规范 + CLI + 两档门禁 + 跨 Agent 适配层"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+license = {text = "MIT"}
+
+[project.scripts]
+zettelgate = "zettelgate.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+zettelgate = ["config.json"]

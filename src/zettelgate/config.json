@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "_comment": "类型与门禁参数唯一真源。原则出处见 PRINCIPLES.md；新增 type:: 只改本文件并同步 SCHEMA.md。",
+  "types": [
+    "视频笔记", "文献笔记", "人物", "概念", "著作", "金句", "MOC", "工具卡",
+    "原子笔记", "结构笔记", "枢纽笔记", "CLOG"
+  ],
+  "topics": ["哲学", "健身", "营养", "技术", "经济学", "心理学", "历史", "科学"],
+  "atomic": {
+    "dir": "pages/原子笔记",
+    "required_sections": ["单一想法", "支撑材料", "出处与引文", "链接"],
+    "required_properties": ["type", "folgezettel", "created"],
+    "exclude_from_orphans": true
+  },
+  "index_sections": {
+    "视频笔记": "笔记",
+    "文献笔记": "笔记",
+    "工具卡": "笔记",
+    "人物": "人物",
+    "概念": "概念",
+    "著作": "著作",
+    "金句": "金句",
+    "MOC": "MOC",
+    "原子笔记": "原子笔记",
+    "结构笔记": "结构笔记",
+    "枢纽笔记": "结构笔记",
+    "CLOG": "结构笔记"
+  },
+  "reference_types": ["视频笔记", "文献笔记"],
+  "structure_types": ["结构笔记", "枢纽笔记", "CLOG"],
+  "doto": {
+    "principles_file": "PRINCIPLES.md",
+    "reference_dir": "references/doto",
+    "gate_sources": {
+      "G1": "Ch.4 连接思想 + CONTRACT.md 库规约",
+      "G2": "Ch.4 禁止链接堆砌 (doto-connect_SKILL.md:19-20)",
+      "G3": "Ch.5 Folgezettel（留空豁免为用户裁决）",
+      "G4": "库规约：CONTRACT.md 落点",
+      "G5": "库规约：ZETTEL.md 骨架（非书原文）",
+      "G6": "库规约：vault-config.json types",
+      "G7": "库规约：SCHEMA.md:15 index 完整性",
+      "G8": "库规约：index 悬空/重复"
+    },
+    "audit_timebox_minutes": 15,
+    "audit_max_items": 8,
+    "link_dump_threshold": 3,
+    "high_link_density": 4,
+    "hub_threshold": 8,
+    "cluster_threshold": 3,
+    "orphan_ratio_warning": 0.5,
+    "clog_pending_warning": 5,
+    "quote_ratio_warning": 0.4,
+    "folgezettel_pattern": "^\\d+(?:\\.\\d+)?[a-z0-9]*$",
+    "title_topic_prefixes": ["关于", "论", "谈谈"],
+    "title_topic_suffixes": ["思考", "笔记", "随想", "杂记", "总结", "研究", "浅析"],
+    "atomicity_markers": ["另外", "还有", "其次", "另一方面", "再者", "顺便说"],
+    "context_markers": ["为什么链", "—", "因为", "延伸", "对比", "因果", "举例", "质疑", "跨域", "in light of", "in spite of"],
+    "annotation_section": "批注",
+    "annotation_required": ["为什么重要", "同意", "相关"],
+    "claim_signals": ["阈值", "正反馈", "不可逆", "必然", "导致", "自持", "温升", "反馈", "成本曲线"],
+    "claim_number_units": ["℃", "°C", "%", "倍", "秒", "分钟", "小时", "km", "mAh", "V"],
+    "honest_marker": "⚠️"
+  }
+}
