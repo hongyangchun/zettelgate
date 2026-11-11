@@ -98,6 +98,7 @@ MIT LICENSE 仅覆盖本仓库自己的代码与文字；`references/doto/` 请�
 
 ## 路线图
 
-- **P0（本版）**：独立仓库、路径参数化、19 项测试、文档与示例库、**CI（ubuntu + windows 矩阵）**；既有实例库零改动。
+- **P0（本版）**：独立仓库、路径参数化、19 项测试、文档与示例库；已发布至 GitHub 公开仓库，既有实例库零改动。
 - **P1**：两端软链切到 `adapters/`、实例库规范标注为「由系统仓生成」、`upgrade` 命令。
-- **P2**：GitHub 发布、只读索引快照；MCP 薄壳仅在需要远端访问时考虑。
+- **P2**：只读索引快照；MCP 薄壳仅在需要远端访问时考虑。
+- **CI（可选）**：如需自动跨平台验证（ubuntu + windows，Python 3.9–3.12），新增 `.github/workflows/ci.yml` 跑 `python -m unittest discover -s tests` 即可；需 gh `workflow` scope，按需开启。
