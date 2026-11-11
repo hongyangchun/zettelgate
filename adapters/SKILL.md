@@ -6,7 +6,7 @@ license: MIT
 tags: [knowledge-base, logseq, zettelkasten, atomic-note, doto]
 ---
 
-# Note OS — 跨 Agent 写笔记统一入口
+# zettelgate — 跨 Agent 写笔记统一入口
 
 > 本文件只是**指针**。规范正文在 `<zettelgate>/specs/`，门禁实现在 `<zettelgate>/src/zettelgate/`，
 > 方法论只读快照在 `<zettelgate>/references/doto/`（见其 `SOURCE.md`）。
@@ -45,6 +45,7 @@ zettelgate --vault "$VAULT" lint          # 硬 gate G1-G8，失败退出码 1
 zettelgate --vault "$VAULT" audit         # 诊断 D1-D16，只读、恒为 0
 zettelgate --vault "$VAULT" index [--fix]
 zettelgate init <库目录>                  # 生成 vault.yaml
+zettelgate --vault "$VAULT" upgrade [--apply]   # 按 schema_version 提示/引导升级（不自动迁移数据）
 ```
 库路径也可用 `ZETTELGATE_VAULT` 环境变量，或在库根放 `vault.yaml` 后于该目录直接运行。
 `zettelgate link` 只处理 `adapters` 配置里显式列出的软链目标，**不硬编码任何宿主目录**。
@@ -64,5 +65,5 @@ zettelgate init <库目录>                  # 生成 vault.yaml
 - 不批量重构历史笔记；不得自动重写既有主笔记；不自动 `git add -A` / `git commit`
 
 ## 并发与新设备
-本机多进程由 `.vault.lock`（flock）保护；跨设备合并由各自的同步方案负责。
+本机多进程由 `.vault.lock`（跨平台互斥锁，POSIX + Windows 通用）保护；跨设备合并由各自的同步方案负责。
 新设备只需装一次 `zettelgate` 系统包，再 `zettelgate init <库目录>` 生成 `vault.yaml` —— 规范与门禁不再依赖笔记同步是否覆盖根目录文件。

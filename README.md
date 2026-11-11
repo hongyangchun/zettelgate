@@ -55,6 +55,7 @@ cd <vault> && zettelgate lint       # 库根有 vault.yaml 时自动发现
 | `index [--fix]` | 覆盖率、类型分布、刷新头部计数 |
 | `init <库目录>` | 生成 `vault.yaml` |
 | `link` | 按 `adapters` 配置创建/修复各 Agent 的 skill 软链 |
+| `upgrade [--apply]` | 按 vault.yaml 的 `schema_version` 提示/引导升级（只改版本标记，不自动迁移数据） |
 
 所有写入都由 `.vault.lock`（跨平台互斥锁，POSIX + Windows 通用）保护，重复执行不会产生第二条 index/log 条目。
 

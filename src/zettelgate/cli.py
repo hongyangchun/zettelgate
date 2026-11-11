@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LogseqVault CLI — 跨 Agent 的唯一写入口与门禁。
+"""zettelgate CLI — 跨 Agent 的唯一写入口与门禁。
 
 规范真源: CONTRACT.md(入口) / SCHEMA.md(文献) / ZETTEL.md(主笔记)
           WRITING.md(Part III) / INGEST.md(外部材料转化) / PRINCIPLES.md(原则→门禁)
@@ -18,10 +18,10 @@ from datetime import date
 from pathlib import Path
 
 try:
-    from zettelgate import paths, lint, doto_audit
+    from zettelgate import paths, lint, doto_audit, upgrade
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from zettelgate import paths, lint, doto_audit
+    from zettelgate import paths, lint, doto_audit, upgrade
 
 try:
     V = paths.vault_root()
@@ -373,10 +373,15 @@ def cmd_init(args):
     if conf.exists():
         print(f"配置已存在，未覆盖：{conf}")
     else:
-        conf.write_text("schema_version: 1\n", encoding="utf-8")
+        conf.write_text(f"schema_version: {CFG['schema_version']}\n", encoding="utf-8")
         print(f"已写入 {conf}")
-    print("zettelgate 不改动笔记正文；用 --vault 或 ZETTELGATE_VAULT 指向本库即可。")
+        print("zettelgate 不改动笔记正文；用 --vault 或 ZETTELGATE_VAULT 指向本库即可。")
     return 0
+
+
+def cmd_upgrade(args):
+    """按 vault.yaml 的 schema_version 提示/引导升级（不自动迁移数据）。"""
+    return upgrade.main(args.apply)
 
 
 def main():
@@ -419,6 +424,10 @@ def main():
     p = sub.add_parser("init", help="在笔记库根生成 vault.yaml（不改动笔记正文）")
     p.add_argument("path", help="笔记库目录")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("upgrade", help="按 schema_version 提示/引导升级（不自动迁移数据）")
+    p.add_argument("--apply", action="store_true", help="仅更新 vault.yaml 版本标记，不改动笔记数据")
+    p.set_defaults(func=cmd_upgrade)
 
     for sp in sub.choices.values():
         sp.add_argument("--vault", dest="vault_in_sub",

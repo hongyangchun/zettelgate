@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LogseqVault 硬 gate（PRINCIPLES.md 第 2 节 G1-G8）。
+"""zettelgate 硬 gate（PRINCIPLES.md 第 2 节 G1-G8）。
 
 只做「可客观判定 / 判错代价低 / 书里明确必须或禁止」的检查；
 语义类判断一律交给 doto_audit.py 出诊断报告（不阻断、不改文件）。

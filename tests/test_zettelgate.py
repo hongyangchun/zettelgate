@@ -19,6 +19,9 @@ sys.path.insert(0, str(SRC))
 
 from zettelgate import paths  # noqa: E402
 
+CFG = paths.load_config()
+PKG_SCHEMA = int(CFG.get("schema_version", 1))
+
 CARD = """type:: 原子笔记
 folgezettel::
 created:: 2026-11-11
@@ -262,6 +265,41 @@ class TestPaths(unittest.TestCase):
         self.assertEqual(len(cfg["types"]), 12)
         self.assertIn("原子笔记", cfg["types"])
         self.assertEqual(cfg["atomic"]["required_properties"], ["type", "folgezettel", "created"])
+
+
+class TestUpgrade(VaultTestCase):
+    def _set_version(self, v):
+        (self.v / "vault.yaml").write_text(f"schema_version: {v}\n", encoding="utf-8")
+
+    def test_20_upgrade_already_latest(self):
+        self._set_version(PKG_SCHEMA)
+        r = self.run_os("upgrade")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("已是最新", r.stdout)
+
+    def test_21_upgrade_behind_is_dry_run(self):
+        if PKG_SCHEMA <= 1:
+            self.skipTest("无更低版本可演示")
+        self._set_version(PKG_SCHEMA - 1)
+        r = self.run_os("upgrade")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn(f"v{PKG_SCHEMA - 1}", r.stdout)
+        # dry-run 不得改动 vault.yaml
+        self.assertEqual(
+            (self.v / "vault.yaml").read_text(encoding="utf-8"),
+            f"schema_version: {PKG_SCHEMA - 1}\n",
+        )
+
+    def test_22_upgrade_apply_bumps_marker_only(self):
+        if PKG_SCHEMA <= 1:
+            self.skipTest("无更低版本可演示")
+        self._set_version(PKG_SCHEMA - 1)
+        r = self.run_os("upgrade", "--apply")
+        self.assertEqual(r.returncode, 0)
+        self.assertEqual(
+            (self.v / "vault.yaml").read_text(encoding="utf-8"),
+            f"schema_version: {PKG_SCHEMA}\n",
+        )
 
 
 if __name__ == "__main__":
