@@ -63,6 +63,49 @@ verified::
 （暂无）
 """
 
+CARD_FM = """---
+type: 原子笔记
+folgezettel:
+created: 2026-11-11
+origin: 回归自检
+tags:
+claim_type:
+verified:
+---
+
+# 测试卡FM
+
+## 单一想法
+
+一个用于回归测试的主张，用自己的话写。
+
+## 支撑材料
+
+- 机制：自检
+- 示例：自检
+- 反例 / 边界条件 ⚠️：自检
+
+## 出处与引文
+
+- 现场来源：回归自检
+
+## 链接
+
+（暂无已存在的链目标）
+
+## 待建链接
+
+（候选写平文）
+
+## 使用记录
+
+由反链自动形成，不手填。
+
+## 拆分候选
+
+（暂无）
+"""
+
 INDEX_HEAD = """# Index
 Total pages: 1
 Last updated: 2026-11-11
@@ -325,6 +368,52 @@ class TestLink(unittest.TestCase):
             rc = cli.cmd_link(mock.Mock(dry_run=True))
         self.assertEqual(rc, 0)
         self.assertFalse(target.exists(), "dry-run 不应创建任何软链")
+
+
+class TestFrontmatter(VaultTestCase):
+    """props.extract_property 兼容 frontmatter 与内联；frontmatter 卡通过门禁。"""
+
+    def test_extract_inline(self):
+        from zettelgate import props
+        self.assertEqual(props.extract_property(CARD, "type"), "原子笔记")
+        self.assertEqual(props.extract_property(CARD, "folgezettel"), "")
+        self.assertIsNone(props.extract_property(CARD, "nope"))
+
+    def test_extract_frontmatter(self):
+        from zettelgate import props
+        self.assertEqual(props.extract_property(CARD_FM, "type"), "原子笔记")
+        self.assertEqual(props.extract_property(CARD_FM, "folgezettel"), "")
+        self.assertIsNone(props.extract_property(CARD_FM, "nope"))
+
+    def test_extract_strips_yaml_quotes(self):
+        from zettelgate import props
+        text = "---\ntype: \"原子笔记\"\n---\n\n# x\n"
+        self.assertEqual(props.extract_property(text, "type"), "原子笔记")
+
+    def test_frontmatter_card_passes_lint(self):
+        # 覆盖默认 CARD（测试卡）为 frontmatter 版本，index.md 的 [[测试卡]] 仍覆盖
+        self.write_card(CARD_FM, name="测试卡")
+        self.assert_ok(self.run_os("lint"), "✅ 硬 gate 全部通过")
+
+    def test_frontmatter_card_passes_check(self):
+        from zettelgate import cli
+        errs = cli.check_card(CARD_FM)
+        self.assertEqual(errs, [], f"frontmatter 卡不应报骨架错误：{errs}")
+
+
+class TestPagesDir(VaultTestCase):
+    """vault.yaml 的 pages_dir 配置生效（Tolaria 扁平存放 / 自定义目录场景）。"""
+
+    def setUp(self):
+        super().setUp()
+        (self.v / "vault.yaml").write_text(
+            "schema_version: 1\npages_dir: notes\n", encoding="utf-8"
+        )
+        (self.v / "notes").mkdir()
+        (self.v / "pages/原子笔记").rename(self.v / "notes/原子笔记")
+
+    def test_lint_finds_notes_in_custom_dir(self):
+        self.assert_ok(self.run_os("lint"), "✅ 硬 gate 全部通过")
 
 
 if __name__ == "__main__":

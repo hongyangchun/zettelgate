@@ -16,19 +16,20 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 try:
-    from zettelgate import paths
+    from zettelgate import paths, props
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from zettelgate import paths
+    from zettelgate import paths, props
 
 
 def main():
     V = paths.vault_root()
-    PAGES = V / "pages"
+    pages_dir = paths.vault_conf(V).get("pages_dir", "pages")
+    PAGES = V / pages_dir
     CFG = paths.load_config()
     D = CFG["doto"]
     TAGS_TYPE = set(CFG["types"])
-    ATOMIC_DIR = V / CFG["atomic"]["dir"]
+    ATOMIC_DIR = V / pages_dir / CFG["atomic"]["dir"]
     SOURCES = D["gate_sources"]
 
     pages, texts = {}, {}
@@ -56,29 +57,28 @@ def main():
 
     # ---- G6 type 越界 -----------------------------------------------------
     for name, text in texts.items():
-        m = re.search(r"^type::[ \t]*(.+)$", text, re.M)
-        if m and m.group(1).strip() not in TAGS_TYPE:
-            issues["G6"].append(f"{name}: type:: {m.group(1).strip()}")
+        t = props.extract_property(text, "type")
+        if t is not None and t not in TAGS_TYPE:
+            issues["G6"].append(f"{name}: type {t}")
 
     # ---- 原子笔记专属（G2/G3/G4/G5）---------------------------------------
     atomic_names = set()
     for name, p in pages.items():
         text = texts[name]
-        m = re.search(r"^type::[ \t]*(.+)$", text, re.M)
-        if not m or m.group(1).strip() != "原子笔记":
+        if props.extract_property(text, "type") != "原子笔记":
             continue
         atomic_names.add(name)
 
         # G4 落点
         if ATOMIC_DIR not in p.parents:
-            issues["G4"].append(f"{name}: 不在 {CFG['atomic']['dir']}/")
+            issues["G4"].append(f"{name}: 不在 {pages_dir}/{CFG['atomic']['dir']}/")
 
         # G5 骨架（库规约，不是书里六要素原文）
         for sec in CFG["atomic"]["required_sections"]:
             if not re.search(rf"^##\s*.*{re.escape(sec)}", text, re.M):
                 issues["G5"].append(f"{name}: 缺段「{sec}」")
         for prop in CFG["atomic"]["required_properties"]:
-            if not re.search(rf"^{re.escape(prop)}::", text, re.M):
+            if props.extract_property(text, prop) is None:
                 issues["G5"].append(f"{name}: 缺 property {prop}::")
         if not re.search(r"^#\s+\S", text, re.M):
             issues["G5"].append(f"{name}: 缺 H1 声明式标题")
@@ -98,11 +98,9 @@ def main():
                 bare_run = 0
 
         # G3 ID 格式：留空合法（用户裁决），填了才校验
-        fm = re.search(r"^folgezettel::[ \t]*(.*)$", text, re.M)
-        if fm:
-            val = fm.group(1).strip()
-            if val and not re.match(D["folgezettel_pattern"], val):
-                issues["G3"].append(f"{name}: folgezettel:: {val} 格式不合法")
+        val = props.extract_property(text, "folgezettel")
+        if val and not re.match(D["folgezettel_pattern"], val):
+            issues["G3"].append(f"{name}: folgezettel:: {val} 格式不合法")
 
     # ---- G7 / G8 index ----------------------------------------------------
     idx = (V / "index.md").read_text(encoding="utf-8")

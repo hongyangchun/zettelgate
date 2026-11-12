@@ -15,6 +15,8 @@
 **系统和数据分开**：`zettelgate/` 里只有规范、代码、测试与只读方法论快照；
 笔记正文（`pages/`、`raw/`、`index.md`、`log.md`）永远留在你自己的 `$VAULT`，不进这个仓库。
 
+支持多笔记后端：Logseq（页首内联属性 `key::`）、Tolaria（YAML frontmatter `key:`）等；门禁对两种格式一视同仁，各后端规范见 `specs/platforms/`。
+
 ## 5 分钟上手
 
 ```bash

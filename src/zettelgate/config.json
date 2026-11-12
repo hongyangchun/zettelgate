@@ -7,7 +7,7 @@
   ],
   "topics": ["哲学", "健身", "营养", "技术", "经济学", "心理学", "历史", "科学"],
   "atomic": {
-    "dir": "pages/原子笔记",
+    "dir": "原子笔记",
     "required_sections": ["单一想法", "支撑材料", "出处与引文", "链接"],
     "required_properties": ["type", "folgezettel", "created"],
     "exclude_from_orphans": true

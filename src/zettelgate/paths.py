@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Optional
@@ -106,3 +107,27 @@ def adapters() -> list:
         except (json.JSONDecodeError, OSError, TypeError):
             items = []
     return [Path(x).expanduser() for x in items]
+
+
+_PAGES_DIR_RE = re.compile(r"^pages_dir:\s*(.+?)\s*$", re.M)
+
+
+def vault_conf(vault=None) -> dict:
+    """读笔记库根的 vault.yaml，返回笔记目录等配置（缺省给默认）。
+
+    当前支持 pages_dir（默认 "pages"）——Tolaria 等后端若把笔记放在其他
+    目录（例如库根扁平存放），在 vault.yaml 里写 `pages_dir: .` 即可。
+    无 vault.yaml 或未配置时回退默认，不抛异常。
+    """
+    try:
+        v = vault or vault_root()
+    except VaultNotConfigured:
+        v = None
+    data = {"pages_dir": "pages"}
+    if v is not None:
+        f = v / "vault.yaml"
+        if f.is_file():
+            m = _PAGES_DIR_RE.search(f.read_text(encoding="utf-8", errors="ignore"))
+            if m:
+                data["pages_dir"] = m.group(1).strip()
+    return data

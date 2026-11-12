@@ -16,10 +16,10 @@ from datetime import date
 from pathlib import Path
 
 try:
-    from zettelgate import paths
+    from zettelgate import paths, props
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from zettelgate import paths
+    from zettelgate import paths, props
 
 
 def main():
@@ -30,11 +30,10 @@ def main():
     LINK_RE = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
 
     pages, texts, meta = {}, {}, {}
-    for p in (V / "pages").rglob("*.md"):
+    for p in (V / paths.vault_conf(V).get("pages_dir", "pages")).rglob("*.md"):
         pages[p.stem] = p
         texts[p.stem] = p.read_text(encoding="utf-8")
-        m = re.search(r"^type::[ \t]*(.+)$", texts[p.stem], re.M)
-        meta[p.stem] = m.group(1).strip() if m else "(无 type::)"
+        meta[p.stem] = props.extract_property(texts[p.stem], "type") or "(无 type::)"
 
     atomic = sorted(n for n, t in meta.items() if t == "原子笔记")
     backlinks = Counter()

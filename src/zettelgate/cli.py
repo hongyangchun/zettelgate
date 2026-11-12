@@ -18,10 +18,10 @@ from datetime import date
 from pathlib import Path
 
 try:
-    from zettelgate import paths, lint, doto_audit, upgrade
+    from zettelgate import paths, lint, doto_audit, upgrade, props
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from zettelgate import paths, lint, doto_audit, upgrade
+    from zettelgate import paths, lint, doto_audit, upgrade, props
 
 try:
     V = paths.vault_root()
@@ -30,8 +30,9 @@ except paths.VaultNotConfigured as _e:
     _VAULT_ERR = str(_e)
 S = paths.PKG_ROOT
 CFG = paths.load_config()
-PAGES = V / "pages" if V else None
-ATOMIC_DIR = V / CFG["atomic"]["dir"] if V else None
+PAGES_DIR = paths.vault_conf(V)["pages_dir"] if V else "pages"
+PAGES = (V / PAGES_DIR) if V else None
+ATOMIC_DIR = (V / PAGES_DIR / CFG["atomic"]["dir"]) if V else None
 INDEX = V / "index.md" if V else None
 LOG = V / "log.md" if V else None
 LOCK = V / ".vault.lock" if V else None
@@ -81,18 +82,17 @@ def slugify(title):
 
 
 def page_type(text):
-    m = re.search(r"^type::[ \t]*(.+)$", text, re.M)
-    return m.group(1).strip() if m else "(无 type::)"
+    return props.page_type(text) or "(无 type::)"
 
 
 def check_card(text):
-    """主笔记骨架（库规约 G5，非书里六要素原文）。"""
+    """主笔记骨架（库规约 G5，非书里六要素原文）。兼容内联 key:: 与 frontmatter。"""
     errs = []
-    if page_type(text) != "原子笔记":
-        errs.append("缺 `type:: 原子笔记`")
+    if props.page_type(text) != "原子笔记":
+        errs.append("缺 `type:: 原子笔记`（或 frontmatter 的 type:）")
     for prop in CFG["atomic"]["required_properties"]:
-        if not re.search(rf"^{re.escape(prop)}::", text, re.M):
-            errs.append(f"缺 property `{prop}::`")
+        if props.extract_property(text, prop) is None:
+            errs.append(f"缺 property `{prop}::`（或 frontmatter 的 `{prop}:`）")
     for sec in CFG["atomic"]["required_sections"]:
         if not re.search(rf"^##\s*.*{re.escape(sec)}", text, re.M):
             errs.append(f"缺段 `## {sec}`")
@@ -144,10 +144,10 @@ def add_log_entry(name, src_name, added, kind):
     if key in text:
         return False
     note = ("- Folgezettel ID 留空待手工填写\n" if "原子笔记" in kind
-            else "- 由 vault.py register 登记（非主笔记，不检六要素骨架）\n")
+            else "- 由 zettelgate register 登记（非主笔记，不检六要素骨架）\n")
     entry = (
         f"\n\n## [{date.today().isoformat()}] {key}\n"
-        f"- 由 vault.py 登记：{src_name}\n"
+        f"- 由 zettelgate 登记：{src_name}\n"
         f"{note}"
         f"- index 条目：{'新增' if added else '已存在，跳过'}\n"
     )
@@ -385,8 +385,12 @@ def cmd_init(args):
     if conf.exists():
         print(f"配置已存在，未覆盖：{conf}")
     else:
-        conf.write_text(f"schema_version: {CFG['schema_version']}\n", encoding="utf-8")
-        print(f"已写入 {conf}")
+        conf.write_text(
+            f"schema_version: {CFG['schema_version']}\n"
+            f"pages_dir: {args.pages_dir}\n",
+            encoding="utf-8",
+        )
+        print(f"已写入 {conf}（pages_dir={args.pages_dir}）")
         print("zettelgate 不改动笔记正文；用 --vault 或 ZETTELGATE_VAULT 指向本库即可。")
     return 0
 
@@ -436,6 +440,8 @@ def main():
 
     p = sub.add_parser("init", help="在笔记库根生成 vault.yaml（不改动笔记正文）")
     p.add_argument("path", help="笔记库目录")
+    p.add_argument("--pages-dir", default="pages",
+                   help="笔记所在目录（相对库根，默认 pages；Tolaria 扁平存放可设 .）")
     p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("upgrade", help="按 schema_version 提示/引导升级（不自动迁移数据）")
